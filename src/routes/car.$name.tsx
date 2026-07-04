@@ -1,0 +1,273 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
+import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Gauge, Ruler, Fuel, Shield, DollarSign, Cog, Car } from "lucide-react";
+import { useState } from "react";
+
+export const Route = createFileRoute("/car/$name")({
+  component: CarPage,
+});
+
+function CarPage() {
+  const { name } = Route.useParams();
+  const query = decodeURIComponent(name);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["car", query],
+    queryFn: () => fetchCarSpecs({ data: { query } }),
+    staleTime: 1000 * 60 * 60,
+  });
+
+  if (isLoading) return <LoadingState query={query} />;
+  if (error) return <ErrorState message={(error as Error).message} />;
+  if (!data) return null;
+  if (!data.found) return <NotFoundState query={query} />;
+
+  return <CarDetail spec={data} />;
+}
+
+function LoadingState({ query }: { query: string }) {
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-24 text-center">
+      <div className="glass-strong rounded-3xl p-12 glow">
+        <Sparkles className="h-10 w-10 mx-auto text-accent animate-pulse mb-4" />
+        <h1 className="text-2xl font-bold">Researching <span className="gradient-text">{query}</span></h1>
+        <p className="mt-3 text-muted-foreground">Our AI is fetching specifications and analysis...</p>
+        <div className="mt-6 h-1 w-full rounded-full bg-white/5 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-primary to-accent animate-pulse" style={{ width: "70%" }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NotFoundState({ query }: { query: string }) {
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+      <div className="glass rounded-3xl p-12">
+        <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
+        <h1 className="text-2xl font-bold">Couldn't find "{query}"</h1>
+        <p className="mt-3 text-muted-foreground">
+          We couldn't reliably identify this vehicle. Please check the spelling or try a different model.
+        </p>
+        <Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
+          <ArrowLeft className="h-4 w-4" /> Back home
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+      <div className="glass rounded-3xl p-12">
+        <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
+        <h1 className="text-2xl font-bold">Something went wrong</h1>
+        <p className="mt-3 text-sm text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+function SpecRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-baseline gap-4 py-2.5 border-b border-border/50 last:border-0">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-right">{value || "Not Available"}</span>
+    </div>
+  );
+}
+
+function SpecCard({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) {
+  return (
+    <div className="glass rounded-2xl p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center">
+          <Icon className="h-4 w-4 text-primary" />
+        </div>
+        <h3 className="font-semibold">{title}</h3>
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function CarDetail({ spec }: { spec: CarSpec }) {
+  const navigate = useNavigate();
+  const [addCar, setAddCar] = useState("");
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10">
+      {/* Hero */}
+      <div className="glass-strong rounded-3xl overflow-hidden mb-8">
+        <div className="relative h-64 sm:h-80 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent flex items-center justify-center">
+          <div className="text-8xl opacity-60">🚗</div>
+          <div className="absolute top-4 left-4 text-xs rounded-full glass px-3 py-1">
+            {spec.bodyType} • {spec.country}
+          </div>
+        </div>
+        <div className="p-6 sm:p-8">
+          <div className="text-sm text-accent font-semibold uppercase tracking-widest">{spec.brand}</div>
+          <h1 className="mt-2 text-4xl sm:text-5xl font-bold">{spec.name}</h1>
+          <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
+            <span>Year: <span className="text-foreground font-medium">{spec.modelYear}</span></span>
+            <span>Fuel: <span className="text-foreground font-medium">{spec.fuelType}</span></span>
+            <span>Transmission: <span className="text-foreground font-medium">{spec.transmission}</span></span>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <div className="glass rounded-xl px-4 py-2">
+              <div className="text-[10px] text-muted-foreground uppercase">Price</div>
+              <div className="font-bold text-primary">{spec.priceRange}</div>
+            </div>
+            <div className="glass rounded-xl px-4 py-2">
+              <div className="text-[10px] text-muted-foreground uppercase">Power</div>
+              <div className="font-bold">{spec.horsepower}</div>
+            </div>
+            <div className="glass rounded-xl px-4 py-2">
+              <div className="text-[10px] text-muted-foreground uppercase">0-100 km/h</div>
+              <div className="font-bold">{spec.zeroToHundred}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Specs grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <SpecCard icon={Cog} title="Engine & Performance">
+          <SpecRow label="Engine" value={spec.engine} />
+          <SpecRow label="Capacity" value={spec.engineCapacity} />
+          <SpecRow label="Horsepower" value={spec.horsepower} />
+          <SpecRow label="Torque" value={spec.torque} />
+          <SpecRow label="Top Speed" value={spec.topSpeed} />
+          <SpecRow label="0-100 km/h" value={spec.zeroToHundred} />
+          <SpecRow label="Drivetrain" value={spec.drivetrain} />
+        </SpecCard>
+
+        <SpecCard icon={Ruler} title="Dimensions">
+          <SpecRow label="Length" value={spec.length} />
+          <SpecRow label="Width" value={spec.width} />
+          <SpecRow label="Height" value={spec.height} />
+          <SpecRow label="Wheelbase" value={spec.wheelbase} />
+          <SpecRow label="Ground Clearance" value={spec.groundClearance} />
+          <SpecRow label="Kerb Weight" value={spec.kerbWeight} />
+          <SpecRow label="Boot Space" value={spec.bootSpace} />
+        </SpecCard>
+
+        <SpecCard icon={Fuel} title="Fuel & Range">
+          <SpecRow label="Fuel Type" value={spec.fuelType} />
+          <SpecRow label="Tank / Battery" value={spec.fuelTankOrBattery} />
+          <SpecRow label="Economy / Range" value={spec.fuelEconomyOrRange} />
+          <SpecRow label="Wheel Size" value={spec.wheelSize} />
+        </SpecCard>
+
+        <SpecCard icon={Car} title="Capacity">
+          <SpecRow label="Seating" value={spec.seatingCapacity} />
+          <SpecRow label="Body Type" value={spec.bodyType} />
+          <SpecRow label="Country" value={spec.country} />
+        </SpecCard>
+
+        <SpecCard icon={Shield} title="Safety">
+          <SpecRow label="Safety" value={spec.safety} />
+        </SpecCard>
+
+        <SpecCard icon={DollarSign} title="Price">
+          <SpecRow label="Range" value={spec.priceRange} />
+        </SpecCard>
+      </div>
+
+      {/* AI Expert */}
+      <div className="mt-10 glass-strong rounded-3xl p-8 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20 pointer-events-none"
+             style={{ background: "radial-gradient(circle at 100% 0%, oklch(0.68 0.19 250 / 60%), transparent 60%)" }} />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow">
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">AI Car Expert</h2>
+              <p className="text-xs text-muted-foreground">Beginner-friendly analysis by Gemini</p>
+            </div>
+          </div>
+
+          <p className="text-base leading-relaxed">{spec.summary}</p>
+
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-semibold text-accent mb-2">Best For</h3>
+              <p className="text-sm text-muted-foreground">{spec.bestUseCase}</p>
+              <h3 className="text-sm font-semibold text-accent mt-4 mb-2">Target Buyers</h3>
+              <p className="text-sm text-muted-foreground">{spec.targetBuyers}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-green-400 mb-2">Advantages</h3>
+              <ul className="space-y-1.5">
+                {spec.pros.map((p, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-muted-foreground">
+                    <Check className="h-4 w-4 text-green-400 shrink-0 mt-0.5" />{p}
+                  </li>
+                ))}
+              </ul>
+              <h3 className="text-sm font-semibold text-orange-400 mt-4 mb-2">Disadvantages</h3>
+              <ul className="space-y-1.5">
+                {spec.cons.map((p, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-muted-foreground">
+                    <X className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />{p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {spec.competitors.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-accent mb-3">Main Competitors</h3>
+              <div className="flex flex-wrap gap-2">
+                {spec.competitors.map((c) => (
+                  <Link
+                    key={c}
+                    to="/car/$name"
+                    params={{ name: encodeURIComponent(c) }}
+                    className="rounded-full glass px-3 py-1.5 text-xs hover:border-primary/50 transition"
+                  >{c}</Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+            <div className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Buying Advice</div>
+            <p className="text-sm">{spec.buyingAdvice}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Compare CTA */}
+      <div className="mt-8 glass rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <GitCompare className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">Compare with another car</h3>
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!addCar.trim()) return;
+            navigate({ to: "/compare", search: { cars: `${spec.name},${addCar.trim()}` } });
+          }}
+          className="flex gap-2"
+        >
+          <input
+            value={addCar}
+            onChange={(e) => setAddCar(e.target.value)}
+            placeholder="e.g. Hyundai Creta"
+            className="flex-1 rounded-xl bg-white/5 border border-border px-4 py-2.5 text-sm outline-none focus:border-primary"
+          />
+          <button className="rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+            Compare
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
