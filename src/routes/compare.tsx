@@ -17,7 +17,7 @@ export const Route = createFileRoute("/compare")({
 function ComparePage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const initial = search.cars ? search.cars.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3) : [];
+  const initial = search.cars ? search.cars.split(",").map((s: string) => s.trim()).filter(Boolean).slice(0, 3) : [];
   const [cars, setCars] = useState<string[]>(initial);
   const [input, setInput] = useState("");
 
