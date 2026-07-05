@@ -101,13 +101,8 @@ function CarDetail({ spec }: { spec: CarSpec }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       {/* Hero */}
-      <div className="glass-strong rounded-3xl overflow-hidden mb-8">
-        <div className="relative h-64 sm:h-80 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent flex items-center justify-center">
-          <div className="text-8xl opacity-60">🚗</div>
-          <div className="absolute top-4 left-4 text-xs rounded-full glass px-3 py-1">
-            {spec.bodyType} • {spec.country}
-          </div>
-        </div>
+        <CarGallery query={spec.name} bodyType={spec.bodyType} country={spec.country} />
+
         <div className="p-6 sm:p-8">
           <div className="text-sm text-accent font-semibold uppercase tracking-widest">{spec.brand}</div>
           <h1 className="mt-2 text-4xl sm:text-5xl font-bold">{spec.name}</h1>
