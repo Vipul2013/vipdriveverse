@@ -14,7 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dream_garage_cars: {
+        Row: {
+          added_at: string
+          body_type: string | null
+          brand: string | null
+          car_name: string
+          car_query: string
+          fuel_type: string | null
+          id: string
+          image_url: string | null
+          model_year: string | null
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          body_type?: string | null
+          brand?: string | null
+          car_name: string
+          car_query: string
+          fuel_type?: string | null
+          id?: string
+          image_url?: string | null
+          model_year?: string | null
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          body_type?: string | null
+          brand?: string | null
+          car_name?: string
+          car_query?: string
+          fuel_type?: string | null
+          id?: string
+          image_url?: string | null
+          model_year?: string | null
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dream_garage_cars_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "dream_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dream_users: {
+        Row: {
+          created_at: string
+          id: string
+          pin_hash: string
+          pin_salt: string
+          username: string
+          username_lower: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pin_hash: string
+          pin_salt: string
+          username: string
+          username_lower: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pin_hash?: string
+          pin_salt?: string
+          username?: string
+          username_lower?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
