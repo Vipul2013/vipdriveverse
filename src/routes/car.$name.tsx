@@ -303,9 +303,12 @@ function CarGallery({ query, bodyType, country }: { query: string; bodyType: str
           />
         )}
         {!isLoading && !hasImages && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center gap-3">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center gap-3 px-6">
             <ImageOff className="h-12 w-12 text-muted-foreground/60" />
-            <div className="text-sm font-semibold text-muted-foreground">Image Coming Soon</div>
+            <div className="text-sm font-semibold text-muted-foreground">Image Not Available</div>
+            <div className="text-xs text-muted-foreground/70 max-w-xs">
+              We couldn't verify an authentic image for this exact model.
+            </div>
           </div>
         )}
         <div className="absolute top-4 left-4 text-xs rounded-full glass px-3 py-1 backdrop-blur">
