@@ -99,9 +99,38 @@ function SpecCard({ icon: Icon, title, children }: { icon: any; title: string; c
 
 function CarDetail({ spec }: { spec: CarSpec }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [addCar, setAddCar] = useState("");
+  const images = qc.getQueryData<{ images: string[] }>(["car-images", spec.name]);
+  const imageUrl = images?.images?.[0] ?? null;
 
-  return (
+  const { data: userData } = useQuery({ queryKey: ["dream-user"], queryFn: () => getDreamUser() });
+  const addFav = useMutation({
+    mutationFn: () =>
+      addToDreamGarage({
+        data: {
+          carQuery: spec.name,
+          carName: spec.name,
+          brand: spec.brand,
+          modelYear: spec.modelYear,
+          bodyType: spec.bodyType,
+          fuelType: spec.fuelType,
+          imageUrl,
+          summary: spec.summary,
+        },
+      }),
+    onSuccess: (r) => {
+      if (r.status === "exists") toast("This car is already in your Dream Garage.");
+      else toast.success("Car added to your Dream Garage.");
+      qc.invalidateQueries({ queryKey: ["dream-garage"] });
+    },
+    onError: (e: Error) => {
+      if (/not signed in/i.test(e.message)) {
+        toast.error("Please sign in to your Dream Garage first.");
+        navigate({ to: "/dream-garage" });
+      } else toast.error(e.message);
+    },
+  });
     <div className="mx-auto max-w-6xl px-4 py-10">
       {/* Hero */}
       <div className="glass-strong rounded-3xl overflow-hidden mb-8">
