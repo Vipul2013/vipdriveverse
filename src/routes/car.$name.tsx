@@ -101,8 +101,8 @@ function CarDetail({ spec }: { spec: CarSpec }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       {/* Hero */}
+      <div className="glass-strong rounded-3xl overflow-hidden mb-8">
         <CarGallery query={spec.name} bodyType={spec.bodyType} country={spec.country} />
-
         <div className="p-6 sm:p-8">
           <div className="text-sm text-accent font-semibold uppercase tracking-widest">{spec.brand}</div>
           <h1 className="mt-2 text-4xl sm:text-5xl font-bold">{spec.name}</h1>
@@ -127,6 +127,7 @@ function CarDetail({ spec }: { spec: CarSpec }) {
           </div>
         </div>
       </div>
+
 
       {/* Specs grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
