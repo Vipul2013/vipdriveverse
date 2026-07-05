@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
-import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Gauge, Ruler, Fuel, Shield, DollarSign, Cog, Car } from "lucide-react";
+import { fetchCarImages } from "@/lib/car-images.functions";
+import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/car/$name")({
@@ -101,12 +102,7 @@ function CarDetail({ spec }: { spec: CarSpec }) {
     <div className="mx-auto max-w-6xl px-4 py-10">
       {/* Hero */}
       <div className="glass-strong rounded-3xl overflow-hidden mb-8">
-        <div className="relative h-64 sm:h-80 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent flex items-center justify-center">
-          <div className="text-8xl opacity-60">🚗</div>
-          <div className="absolute top-4 left-4 text-xs rounded-full glass px-3 py-1">
-            {spec.bodyType} • {spec.country}
-          </div>
-        </div>
+        <CarGallery query={spec.name} bodyType={spec.bodyType} country={spec.country} />
         <div className="p-6 sm:p-8">
           <div className="text-sm text-accent font-semibold uppercase tracking-widest">{spec.brand}</div>
           <h1 className="mt-2 text-4xl sm:text-5xl font-bold">{spec.name}</h1>
@@ -131,6 +127,7 @@ function CarDetail({ spec }: { spec: CarSpec }) {
           </div>
         </div>
       </div>
+
 
       {/* Specs grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -271,3 +268,92 @@ function CarDetail({ spec }: { spec: CarSpec }) {
     </div>
   );
 }
+
+function CarGallery({ query, bodyType, country }: { query: string; bodyType: string; country: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["car-images", query],
+    queryFn: () => fetchCarImages({ data: { query } }),
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
+  const [idx, setIdx] = useState(0);
+  const images = data?.images ?? [];
+  const hasImages = images.length > 0;
+  const current = hasImages ? images[Math.min(idx, images.length - 1)] : null;
+
+  return (
+    <div className="relative">
+      <div className="relative h-64 sm:h-96 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent overflow-hidden">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
+          </div>
+        )}
+        {!isLoading && current && (
+          <img
+            key={current}
+            src={current}
+            alt={query}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover animate-in fade-in duration-500"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        )}
+        {!isLoading && !hasImages && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center gap-3">
+            <ImageOff className="h-12 w-12 text-muted-foreground/60" />
+            <div className="text-sm font-semibold text-muted-foreground">Image Coming Soon</div>
+          </div>
+        )}
+        <div className="absolute top-4 left-4 text-xs rounded-full glass px-3 py-1 backdrop-blur">
+          {bodyType} • {country}
+        </div>
+        {hasImages && images.length > 1 && (
+          <>
+            <button
+              onClick={() => setIdx((i) => (i - 1 + images.length) % images.length)}
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full glass flex items-center justify-center hover:bg-white/20"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setIdx((i) => (i + 1) % images.length)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full glass flex items-center justify-center hover:bg-white/20"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+            <div className="absolute bottom-3 right-4 text-[10px] rounded-full glass px-2.5 py-1">
+              {idx + 1} / {images.length}
+            </div>
+          </>
+        )}
+      </div>
+      {hasImages && images.length > 1 && (
+        <div className="flex gap-2 p-3 overflow-x-auto scrollbar-none bg-black/20">
+          {images.map((src, i) => (
+            <button
+              key={src}
+              onClick={() => setIdx(i)}
+              className={`shrink-0 h-16 w-24 rounded-lg overflow-hidden border-2 transition ${
+                i === idx ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"
+              }`}
+            >
+              <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+      {data?.attribution && (
+        <div className="px-4 py-1.5 text-[10px] text-muted-foreground/70 bg-black/20">
+          {data.attribution}
+        </div>
+      )}
+    </div>
+  );
+}
+
