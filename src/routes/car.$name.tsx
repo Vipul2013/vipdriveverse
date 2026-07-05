@@ -1,9 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
 import { fetchCarImages } from "@/lib/car-images.functions";
-import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight } from "lucide-react";
+import { addToDreamGarage } from "@/lib/dream-garage.functions";
+import { getDreamUser } from "@/lib/dream-auth.functions";
+import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/car/$name")({
   component: CarPage,
