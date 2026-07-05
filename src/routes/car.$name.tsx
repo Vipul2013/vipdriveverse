@@ -1,9 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
 import { fetchCarImages } from "@/lib/car-images.functions";
-import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight } from "lucide-react";
+import { addToDreamGarage } from "@/lib/dream-garage.functions";
+import { getDreamUser } from "@/lib/dream-auth.functions";
+import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/car/$name")({
   component: CarPage,
@@ -96,10 +99,51 @@ function SpecCard({ icon: Icon, title, children }: { icon: any; title: string; c
 
 function CarDetail({ spec }: { spec: CarSpec }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [addCar, setAddCar] = useState("");
+  const images = qc.getQueryData<{ images: string[] }>(["car-images", spec.name]);
+  const imageUrl = images?.images?.[0] ?? null;
+
+  const { data: userData } = useQuery({ queryKey: ["dream-user"], queryFn: () => getDreamUser() });
+  const addFav = useMutation({
+    mutationFn: () =>
+      addToDreamGarage({
+        data: {
+          carQuery: spec.name,
+          carName: spec.name,
+          brand: spec.brand,
+          modelYear: spec.modelYear,
+          bodyType: spec.bodyType,
+          fuelType: spec.fuelType,
+          imageUrl,
+          summary: spec.summary,
+        },
+      }),
+    onSuccess: (r) => {
+      if (r.status === "exists") toast("This car is already in your Dream Garage.");
+      else toast.success("Car added to your Dream Garage.");
+      qc.invalidateQueries({ queryKey: ["dream-garage"] });
+    },
+    onError: (e: Error) => {
+      if (/not signed in/i.test(e.message)) {
+        toast.error("Please sign in to your Dream Garage first.");
+        navigate({ to: "/dream-garage" });
+      } else toast.error(e.message);
+    },
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => addFav.mutate(undefined)}
+          disabled={addFav.isPending}
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg hover:opacity-90 transition disabled:opacity-50"
+        >
+          <Heart className="h-4 w-4 fill-current" />
+          {userData?.user ? "Add to Dream Garage" : "Sign in & Add to Dream Garage"}
+        </button>
+      </div>
       {/* Hero */}
       <div className="glass-strong rounded-3xl overflow-hidden mb-8">
         <CarGallery query={spec.name} bodyType={spec.bodyType} country={spec.country} />

@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DreamGarageRouteImport } from './routes/dream-garage'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CarNameRouteImport } from './routes/car.$name'
 
+const DreamGarageRoute = DreamGarageRouteImport.update({
+  id: '/dream-garage',
+  path: '/dream-garage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
@@ -32,35 +38,46 @@ const CarNameRoute = CarNameRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
+  '/dream-garage': typeof DreamGarageRoute
   '/car/$name': typeof CarNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
+  '/dream-garage': typeof DreamGarageRoute
   '/car/$name': typeof CarNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
+  '/dream-garage': typeof DreamGarageRoute
   '/car/$name': typeof CarNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/compare' | '/car/$name'
+  fullPaths: '/' | '/compare' | '/dream-garage' | '/car/$name'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/compare' | '/car/$name'
-  id: '__root__' | '/' | '/compare' | '/car/$name'
+  to: '/' | '/compare' | '/dream-garage' | '/car/$name'
+  id: '__root__' | '/' | '/compare' | '/dream-garage' | '/car/$name'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompareRoute: typeof CompareRoute
+  DreamGarageRoute: typeof DreamGarageRoute
   CarNameRoute: typeof CarNameRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dream-garage': {
+      id: '/dream-garage'
+      path: '/dream-garage'
+      fullPath: '/dream-garage'
+      preLoaderRoute: typeof DreamGarageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/compare': {
       id: '/compare'
       path: '/compare'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompareRoute: CompareRoute,
+  DreamGarageRoute: DreamGarageRoute,
   CarNameRoute: CarNameRoute,
 }
 export const routeTree = rootRouteImport
