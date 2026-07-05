@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
-import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Gauge, Ruler, Fuel, Shield, DollarSign, Cog, Car } from "lucide-react";
+import { fetchCarImages } from "@/lib/car-images.functions";
+import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/car/$name")({
