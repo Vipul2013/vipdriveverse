@@ -1,15 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, Zap, GitCompare, Sparkles, ArrowRight } from "lucide-react";
+import { TOP_BRANDS } from "@/lib/brands-data";
+import { AiAssistant } from "@/components/AiAssistant";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
-
-const POPULAR_BRANDS = [
-  "Toyota", "BMW", "Mercedes-Benz", "Porsche", "Ferrari", "Lamborghini",
-  "Tata", "Mahindra", "Hyundai", "Maruti Suzuki", "Honda", "Tesla",
-];
 
 const FEATURED_CARS = [
   { name: "Toyota Fortuner", tag: "SUV" },
