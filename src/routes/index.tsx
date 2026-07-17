@@ -1,15 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, Zap, GitCompare, Sparkles, ArrowRight } from "lucide-react";
+import { TOP_BRANDS } from "@/lib/brands-data";
+import { AiAssistant } from "@/components/AiAssistant";
 
 export const Route = createFileRoute("/")({
   component: Home,
 });
-
-const POPULAR_BRANDS = [
-  "Toyota", "BMW", "Mercedes-Benz", "Porsche", "Ferrari", "Lamborghini",
-  "Tata", "Mahindra", "Hyundai", "Maruti Suzuki", "Honda", "Tesla",
-];
 
 const FEATURED_CARS = [
   { name: "Toyota Fortuner", tag: "SUV" },
@@ -113,16 +110,25 @@ function Home() {
 
       {/* Popular brands */}
       <section className="mx-auto max-w-7xl px-4 py-16">
-        <h2 className="text-3xl font-bold mb-8">Popular Brands</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-          {POPULAR_BRANDS.map((b) => (
-            <button
+        <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
+          <h2 className="text-3xl font-bold">Popular Brands</h2>
+          <Link
+            to="/brands"
+            className="inline-flex items-center gap-1.5 rounded-full glass px-4 py-2 text-sm font-medium hover:border-primary/50 hover:text-primary transition"
+          >
+            View All Brands <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-3">
+          {TOP_BRANDS.map((b) => (
+            <Link
               key={b}
-              onClick={() => go(b)}
+              to="/brand/$name"
+              params={{ name: encodeURIComponent(b) }}
               className="glass rounded-xl px-4 py-5 text-center text-sm font-medium hover:border-primary/50 hover:text-primary transition"
             >
               {b}
-            </button>
+            </Link>
           ))}
         </div>
       </section>
@@ -158,25 +164,9 @@ function Home() {
         </div>
       </section>
 
-      {/* AI CTA */}
-      <section className="mx-auto max-w-5xl px-4 py-20">
-        <div className="glass-strong rounded-3xl p-10 sm:p-16 text-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-30 pointer-events-none"
-               style={{ background: "radial-gradient(circle at 50% 0%, oklch(0.68 0.19 250 / 40%), transparent 60%)" }} />
-          <Sparkles className="h-10 w-10 mx-auto text-accent mb-4 relative" />
-          <h2 className="text-3xl sm:text-4xl font-bold relative">
-            Ask AI about <span className="gradient-text">any car</span>
-          </h2>
-          <p className="mt-4 text-muted-foreground max-w-xl mx-auto relative">
-            Get a beginner-friendly explanation of what a car is, who it's for, and whether it's the right buy for you.
-          </p>
-          <button
-            onClick={() => go("Toyota Innova Crysta")}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition relative"
-          >
-            Try a sample <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
+      {/* AI Assistant */}
+      <section className="mx-auto max-w-4xl px-4 py-20">
+        <AiAssistant />
       </section>
     </div>
   );
