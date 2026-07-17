@@ -113,6 +113,9 @@ function Nav() {
           <Link to="/" className="rounded-full px-3 py-2 hover:bg-white/5 transition" activeOptions={{ exact: true }} activeProps={{ className: "text-primary" }}>
             Home
           </Link>
+          <Link to="/brands" className="rounded-full px-3 py-2 hover:bg-white/5 transition" activeProps={{ className: "text-primary" }}>
+            Brands
+          </Link>
           <Link to="/compare" className="rounded-full px-3 py-2 hover:bg-white/5 transition" activeProps={{ className: "text-primary" }}>
             Compare
           </Link>
