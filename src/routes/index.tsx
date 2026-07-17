@@ -110,16 +110,25 @@ function Home() {
 
       {/* Popular brands */}
       <section className="mx-auto max-w-7xl px-4 py-16">
-        <h2 className="text-3xl font-bold mb-8">Popular Brands</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-          {POPULAR_BRANDS.map((b) => (
-            <button
+        <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
+          <h2 className="text-3xl font-bold">Popular Brands</h2>
+          <Link
+            to="/brands"
+            className="inline-flex items-center gap-1.5 rounded-full glass px-4 py-2 text-sm font-medium hover:border-primary/50 hover:text-primary transition"
+          >
+            View All Brands <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-3">
+          {TOP_BRANDS.map((b) => (
+            <Link
               key={b}
-              onClick={() => go(b)}
+              to="/brand/$name"
+              params={{ name: encodeURIComponent(b) }}
               className="glass rounded-xl px-4 py-5 text-center text-sm font-medium hover:border-primary/50 hover:text-primary transition"
             >
               {b}
-            </button>
+            </Link>
           ))}
         </div>
       </section>
