@@ -164,25 +164,9 @@ function Home() {
         </div>
       </section>
 
-      {/* AI CTA */}
-      <section className="mx-auto max-w-5xl px-4 py-20">
-        <div className="glass-strong rounded-3xl p-10 sm:p-16 text-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-30 pointer-events-none"
-               style={{ background: "radial-gradient(circle at 50% 0%, oklch(0.68 0.19 250 / 40%), transparent 60%)" }} />
-          <Sparkles className="h-10 w-10 mx-auto text-accent mb-4 relative" />
-          <h2 className="text-3xl sm:text-4xl font-bold relative">
-            Ask AI about <span className="gradient-text">any car</span>
-          </h2>
-          <p className="mt-4 text-muted-foreground max-w-xl mx-auto relative">
-            Get a beginner-friendly explanation of what a car is, who it's for, and whether it's the right buy for you.
-          </p>
-          <button
-            onClick={() => go("Toyota Innova Crysta")}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition relative"
-          >
-            Try a sample <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
+      {/* AI Assistant */}
+      <section className="mx-auto max-w-4xl px-4 py-20">
+        <AiAssistant />
       </section>
     </div>
   );
