@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DreamGarageRouteImport } from './routes/dream-garage'
 import { Route as CompareRouteImport } from './routes/compare'
+import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CarNameRouteImport } from './routes/car.$name'
 
@@ -22,6 +23,11 @@ const DreamGarageRoute = DreamGarageRouteImport.update({
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrandsRoute = BrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,12 +43,14 @@ const CarNameRoute = CarNameRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
   '/car/$name': typeof CarNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
   '/car/$name': typeof CarNameRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
   '/car/$name': typeof CarNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/compare' | '/dream-garage' | '/car/$name'
+  fullPaths: '/' | '/brands' | '/compare' | '/dream-garage' | '/car/$name'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/compare' | '/dream-garage' | '/car/$name'
-  id: '__root__' | '/' | '/compare' | '/dream-garage' | '/car/$name'
+  to: '/' | '/brands' | '/compare' | '/dream-garage' | '/car/$name'
+  id: '__root__' | '/' | '/brands' | '/compare' | '/dream-garage' | '/car/$name'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrandsRoute: typeof BrandsRoute
   CompareRoute: typeof CompareRoute
   DreamGarageRoute: typeof DreamGarageRoute
   CarNameRoute: typeof CarNameRoute
@@ -85,6 +95,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompareRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/brands': {
+      id: '/brands'
+      path: '/brands'
+      fullPath: '/brands'
+      preLoaderRoute: typeof BrandsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrandsRoute: BrandsRoute,
   CompareRoute: CompareRoute,
   DreamGarageRoute: DreamGarageRoute,
   CarNameRoute: CarNameRoute,
