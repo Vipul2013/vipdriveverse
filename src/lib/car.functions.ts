@@ -158,7 +158,7 @@ export const fetchCarSpecs = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<CarSpec> => {
     const query = data.query.trim();
     const model = getModel();
-    const prompt = `Return full JSON specifications for the car: "${query}". Use the latest common production variant unless a year/variant is specified. Provide 3-5 pros, 3-5 cons, and 3-5 competitor names. Respond with ONLY a JSON object matching this schema:\n${SPEC_SCHEMA_HINT}`;
+    const prompt = `Return full JSON specifications for this EXACT car: "${query}". Use the latest common production variant unless a year/variant is specified. If "${query}" is not a real vehicle you recognise, respond with {"found": false, "name": "${query}"} only — never return a different model instead. Provide 3-5 pros, 3-5 cons, and 3-5 competitor names. Respond with ONLY a JSON object matching this schema:\n${SPEC_SCHEMA_HINT}`;
 
     let rawText = "";
     try {
