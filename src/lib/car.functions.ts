@@ -2,11 +2,20 @@ import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { carId, identityMatches } from "./car-id";
 
 const NA = "Not Available";
 
 const CarSpecSchema = z.object({
   found: z.boolean(),
+  /** stable unique id derived from the canonical name */
+  id: z.string(),
+  /** exactly what the user searched for */
+  requestedQuery: z.string(),
+  /** true only when the returned car is the exact car requested */
+  exactMatch: z.boolean(),
+  /** when the model tried to substitute a different car, its name is kept here */
+  substituteName: z.string().nullable(),
   name: z.string(),
   brand: z.string(),
   modelYear: z.string(),
@@ -76,9 +85,17 @@ function coerceToSpec(query: string, obj: unknown): CarSpec {
   const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : typeof v === "number" ? String(v) : NA);
   const arr = (v: unknown): string[] =>
     Array.isArray(v) ? v.map((x) => (typeof x === "string" ? x : String(x))).filter(Boolean) : [];
+  const rawName = str(o.name) === NA ? query : str(o.name);
+  const recognized = o.found === false ? false : true;
+  const exact = recognized && identityMatches(query, rawName);
+  const name = exact ? rawName : query;
   return {
-    found: o.found === false ? false : true,
-    name: str(o.name) === NA ? query : str(o.name),
+    found: recognized && exact,
+    id: carId(name),
+    requestedQuery: query,
+    exactMatch: exact,
+    substituteName: recognized && !exact ? rawName : null,
+    name,
     brand: str(o.brand),
     modelYear: str(o.modelYear),
     bodyType: str(o.bodyType),
@@ -115,7 +132,13 @@ function coerceToSpec(query: string, obj: unknown): CarSpec {
   };
 }
 
-const SPEC_SYSTEM = `You are an expert automotive researcher. You MUST respond with ONLY a valid JSON object (no prose, no markdown fences) matching the schema requested. Use "Not Available" for any field you are unsure about. Include units in values (e.g. "197 hp", "250 Nm", "180 km/h", "4795 mm", "60 L", "17 km/l").`;
+const SPEC_SYSTEM = `You are an expert automotive researcher. You MUST respond with ONLY a valid JSON object (no prose, no markdown fences) matching the schema requested. Use "Not Available" for any field you are unsure about. Include units in values (e.g. "197 hp", "250 Nm", "180 km/h", "4795 mm", "60 L", "17 km/l").
+
+IDENTITY RULES (critical):
+- Return data for the EXACT model requested, including its exact model code/number.
+- NEVER substitute a similar or nearby model (e.g. do NOT answer "XUV 3XO" when "XUV 7XO" was asked).
+- If the exact model does not exist or you do not recognise it, set "found": false and leave every other field as "Not Available". Do not guess.
+- The "name" field must contain the exact requested model name (brand + model), never a different model.`;
 
 const SPEC_SCHEMA_HINT = `{
   "found": boolean (true if you recognize the vehicle),
@@ -135,7 +158,7 @@ export const fetchCarSpecs = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<CarSpec> => {
     const query = data.query.trim();
     const model = getModel();
-    const prompt = `Return full JSON specifications for the car: "${query}". Use the latest common production variant unless a year/variant is specified. Provide 3-5 pros, 3-5 cons, and 3-5 competitor names. Respond with ONLY a JSON object matching this schema:\n${SPEC_SCHEMA_HINT}`;
+    const prompt = `Return full JSON specifications for this EXACT car: "${query}". Use the latest common production variant unless a year/variant is specified. If "${query}" is not a real vehicle you recognise, respond with {"found": false, "name": "${query}"} only — never return a different model instead. Provide 3-5 pros, 3-5 cons, and 3-5 competitor names. Respond with ONLY a JSON object matching this schema:\n${SPEC_SCHEMA_HINT}`;
 
     let rawText = "";
     try {

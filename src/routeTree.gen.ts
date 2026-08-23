@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as DreamGarageRouteImport } from './routes/dream-garage'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as BrandsRouteImport } from './routes/brands'
@@ -16,6 +17,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CarNameRouteImport } from './routes/car.$name'
 import { Route as BrandNameRouteImport } from './routes/brand.$name'
 
+const RankingsRoute = RankingsRouteImport.update({
+  id: '/rankings',
+  path: '/rankings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DreamGarageRoute = DreamGarageRouteImport.update({
   id: '/dream-garage',
   path: '/dream-garage',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
+  '/rankings': typeof RankingsRoute
   '/brand/$name': typeof BrandNameRoute
   '/car/$name': typeof CarNameRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
+  '/rankings': typeof RankingsRoute
   '/brand/$name': typeof BrandNameRoute
   '/car/$name': typeof CarNameRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
+  '/rankings': typeof RankingsRoute
   '/brand/$name': typeof BrandNameRoute
   '/car/$name': typeof CarNameRoute
 }
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/brands'
     | '/compare'
     | '/dream-garage'
+    | '/rankings'
     | '/brand/$name'
     | '/car/$name'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/brands'
     | '/compare'
     | '/dream-garage'
+    | '/rankings'
     | '/brand/$name'
     | '/car/$name'
   id:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/brands'
     | '/compare'
     | '/dream-garage'
+    | '/rankings'
     | '/brand/$name'
     | '/car/$name'
   fileRoutesById: FileRoutesById
@@ -104,12 +116,20 @@ export interface RootRouteChildren {
   BrandsRoute: typeof BrandsRoute
   CompareRoute: typeof CompareRoute
   DreamGarageRoute: typeof DreamGarageRoute
+  RankingsRoute: typeof RankingsRoute
   BrandNameRoute: typeof BrandNameRoute
   CarNameRoute: typeof CarNameRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/rankings': {
+      id: '/rankings'
+      path: '/rankings'
+      fullPath: '/rankings'
+      preLoaderRoute: typeof RankingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dream-garage': {
       id: '/dream-garage'
       path: '/dream-garage'
@@ -160,9 +180,20 @@ const rootRouteChildren: RootRouteChildren = {
   BrandsRoute: BrandsRoute,
   CompareRoute: CompareRoute,
   DreamGarageRoute: DreamGarageRoute,
+  RankingsRoute: RankingsRoute,
   BrandNameRoute: BrandNameRoute,
   CarNameRoute: CarNameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
