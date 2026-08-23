@@ -7,6 +7,14 @@ const NA = "Not Available";
 
 const CarSpecSchema = z.object({
   found: z.boolean(),
+  /** stable unique id derived from the canonical name */
+  id: z.string(),
+  /** exactly what the user searched for */
+  requestedQuery: z.string(),
+  /** true only when the returned car is the exact car requested */
+  exactMatch: z.boolean(),
+  /** when the model tried to substitute a different car, its name is kept here */
+  substituteName: z.string().nullable(),
   name: z.string(),
   brand: z.string(),
   modelYear: z.string(),
