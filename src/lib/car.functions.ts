@@ -132,7 +132,13 @@ function coerceToSpec(query: string, obj: unknown): CarSpec {
   };
 }
 
-const SPEC_SYSTEM = `You are an expert automotive researcher. You MUST respond with ONLY a valid JSON object (no prose, no markdown fences) matching the schema requested. Use "Not Available" for any field you are unsure about. Include units in values (e.g. "197 hp", "250 Nm", "180 km/h", "4795 mm", "60 L", "17 km/l").`;
+const SPEC_SYSTEM = `You are an expert automotive researcher. You MUST respond with ONLY a valid JSON object (no prose, no markdown fences) matching the schema requested. Use "Not Available" for any field you are unsure about. Include units in values (e.g. "197 hp", "250 Nm", "180 km/h", "4795 mm", "60 L", "17 km/l").
+
+IDENTITY RULES (critical):
+- Return data for the EXACT model requested, including its exact model code/number.
+- NEVER substitute a similar or nearby model (e.g. do NOT answer "XUV 3XO" when "XUV 7XO" was asked).
+- If the exact model does not exist or you do not recognise it, set "found": false and leave every other field as "Not Available". Do not guess.
+- The "name" field must contain the exact requested model name (brand + model), never a different model.`;
 
 const SPEC_SCHEMA_HINT = `{
   "found": boolean (true if you recognize the vehicle),
