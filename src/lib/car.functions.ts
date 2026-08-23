@@ -84,9 +84,17 @@ function coerceToSpec(query: string, obj: unknown): CarSpec {
   const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : typeof v === "number" ? String(v) : NA);
   const arr = (v: unknown): string[] =>
     Array.isArray(v) ? v.map((x) => (typeof x === "string" ? x : String(x))).filter(Boolean) : [];
+  const rawName = str(o.name) === NA ? query : str(o.name);
+  const recognized = o.found === false ? false : true;
+  const exact = recognized && identityMatches(query, rawName);
+  const name = exact ? rawName : query;
   return {
-    found: o.found === false ? false : true,
-    name: str(o.name) === NA ? query : str(o.name),
+    found: recognized && exact,
+    id: carId(name),
+    requestedQuery: query,
+    exactMatch: exact,
+    substituteName: recognized && !exact ? rawName : null,
+    name,
     brand: str(o.brand),
     modelYear: str(o.modelYear),
     bodyType: str(o.bodyType),
