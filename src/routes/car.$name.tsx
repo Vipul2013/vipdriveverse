@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
+import { carId } from "@/lib/car-id";
 import { fetchCarImages } from "@/lib/car-images.functions";
 import { addToDreamGarage } from "@/lib/dream-garage.functions";
 import { getDreamUser } from "@/lib/dream-auth.functions";
@@ -294,7 +295,7 @@ function CarDetail({ spec }: { spec: CarSpec }) {
           onSubmit={(e) => {
             e.preventDefault();
             if (!addCar.trim()) return;
-            navigate({ to: "/compare", search: { cars: `${spec.name},${addCar.trim()}` } });
+            navigate({ to: "/compare", search: { cars: `${spec.id},${carId(addCar.trim())}` } });
           }}
           className="flex gap-2"
         >
