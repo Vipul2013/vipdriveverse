@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { fetchCarSpecs, compareCarsAI, type CarSpec } from "@/lib/car.functions";
-import { useState } from "react";
+import { carId, idToQuery } from "@/lib/car-id";
+import { useMemo, useState } from "react";
 import { z } from "zod";
-import { Plus, X, Sparkles, GitCompare, Trophy, Loader2 } from "lucide-react";
+import { Plus, X, Sparkles, GitCompare, Trophy, Loader2, AlertCircle } from "lucide-react";
 
 const searchSchema = z.object({
   cars: z.string().optional(),
@@ -11,47 +12,99 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/compare")({
   validateSearch: searchSchema,
+  head: () => ({
+    meta: [
+      { title: "Compare Cars Side-by-Side | VIP DriveVerse" },
+      { name: "description", content: "Compare up to three cars side-by-side with verified specifications and a balanced AI recommendation." },
+      { property: "og:title", content: "Compare Cars Side-by-Side | VIP DriveVerse" },
+      { property: "og:description", content: "Add cars and compare specifications and AI verdicts across every use case." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: ComparePage,
 });
+
+/**
+ * A comparison slot is identified by the car's stable unique id (never by array
+ * index and never by a loosely-typed name). The id is derived from exactly what
+ * the user asked for, so "mahindra-xuv-7xo" can never become "mahindra-xuv-3xo".
+ */
+type Slot = { id: string; query: string };
+
+function parseSlots(raw: string | undefined): Slot[] {
+  if (!raw) return [];
+  const out: Slot[] = [];
+  const seen = new Set<string>();
+  for (const part of raw.split(",")) {
+    const query = part.trim();
+    if (!query) continue;
+    const id = carId(query);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({ id, query: idToQuery(id) });
+    if (out.length >= 3) break;
+  }
+  return out;
+}
 
 function ComparePage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const initial = search.cars ? search.cars.split(",").map((s: string) => s.trim()).filter(Boolean).slice(0, 3) : [];
-  const [cars, setCars] = useState<string[]>(initial);
+  const slots = useMemo(() => parseSlots(search.cars), [search.cars]);
   const [input, setInput] = useState("");
 
   const results = useQueries({
-    queries: cars.map((c) => ({
-      queryKey: ["car", c],
-      queryFn: () => fetchCarSpecs({ data: { query: c } }),
+    queries: slots.map((slot) => ({
+      // key by the stable id, so slots can never share/steal each other's data
+      queryKey: ["car", slot.id],
+      queryFn: () => fetchCarSpecs({ data: { query: slot.query } }),
       staleTime: 1000 * 60 * 60,
     })),
   });
 
-  const allLoaded = cars.length >= 2 && results.every((r) => r.data && !r.isLoading);
-  const foundCars = results.filter((r) => r.data?.found).map((r) => r.data!) as CarSpec[];
-
-  const comparison = useQuery({
-    queryKey: ["compare", foundCars.map((c) => c.name).join("|")],
-    queryFn: () => compareCarsAI({ data: { cars: foundCars.map((c) => c.name) } }),
-    enabled: allLoaded && foundCars.length >= 2,
-    staleTime: 1000 * 60 * 60,
-  });
+  const setSlots = (next: Slot[]) =>
+    navigate({
+      to: "/compare",
+      search: { cars: next.map((s) => s.id).join(",") || undefined },
+      replace: true,
+    });
 
   const addCar = () => {
-    if (!input.trim() || cars.length >= 3) return;
-    const next = [...cars, input.trim()];
-    setCars(next);
+    const value = input.trim();
+    if (!value || slots.length >= 3) return;
+    const id = carId(value);
+    if (!id || slots.some((s) => s.id === id)) {
+      setInput("");
+      return;
+    }
+    setSlots([...slots, { id, query: idToQuery(id) }]);
     setInput("");
-    navigate({ to: "/compare", search: { cars: next.join(",") }, replace: true });
   };
 
-  const removeCar = (i: number) => {
-    const next = cars.filter((_, idx) => idx !== i);
-    setCars(next);
-    navigate({ to: "/compare", search: { cars: next.join(",") || undefined }, replace: true });
-  };
+  const removeCar = (id: string) => setSlots(slots.filter((s) => s.id !== id));
+
+  const settled = slots.length >= 2 && results.every((r) => !r.isLoading);
+  // Only slots whose EXACT requested car was verified take part in the comparison.
+  const foundCars: CarSpec[] = slots
+    .map((slot, i) => {
+      const spec = results[i]?.data;
+      if (!spec || !spec.found || spec.id !== slot.id) return null;
+      return spec;
+    })
+    .filter((s): s is CarSpec => s !== null);
+
+  const missing = slots.filter((slot, i) => {
+    const spec = results[i]?.data;
+    return settled && (!spec || !spec.found || spec.id !== slot.id);
+  });
+
+  const comparison = useQuery({
+    queryKey: ["compare", foundCars.map((c) => c.id).join("|")],
+    queryFn: () => compareCarsAI({ data: { cars: foundCars.map((c) => c.name) } }),
+    enabled: settled && foundCars.length >= 2,
+    staleTime: 1000 * 60 * 60,
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
@@ -68,19 +121,23 @@ function ComparePage() {
       {/* Car input */}
       <div className="glass-strong rounded-2xl p-4 mb-8 max-w-3xl mx-auto">
         <div className="flex flex-wrap gap-2 mb-3">
-          {cars.map((c, i) => (
-            <div key={i} className="rounded-full bg-primary/20 border border-primary/40 px-3 py-1.5 text-sm flex items-center gap-2">
-              {c}
-              <button onClick={() => removeCar(i)}><X className="h-3.5 w-3.5" /></button>
-            </div>
-          ))}
+          {slots.map((slot, i) => {
+            const spec = results[i]?.data;
+            const label = spec?.found && spec.id === slot.id ? spec.name : slot.query;
+            return (
+              <div key={slot.id} className="rounded-full bg-primary/20 border border-primary/40 px-3 py-1.5 text-sm flex items-center gap-2">
+                {label}
+                <button aria-label={`Remove ${label}`} onClick={() => removeCar(slot.id)}><X className="h-3.5 w-3.5" /></button>
+              </div>
+            );
+          })}
         </div>
-        {cars.length < 3 && (
+        {slots.length < 3 && (
           <form onSubmit={(e) => { e.preventDefault(); addCar(); }} className="flex gap-2">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={cars.length === 0 ? "Add first car..." : "Add another car..."}
+              placeholder={slots.length === 0 ? "Add first car..." : "Add another car..."}
               className="flex-1 rounded-xl bg-white/5 border border-border px-4 py-2.5 text-sm outline-none focus:border-primary"
             />
             <button className="rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2.5 text-sm font-semibold text-primary-foreground inline-flex items-center gap-1">
@@ -88,28 +145,40 @@ function ComparePage() {
             </button>
           </form>
         )}
-        {cars.length < 2 && (
+        {slots.length < 2 && (
           <p className="mt-3 text-xs text-muted-foreground">Add at least 2 cars to start comparing.</p>
         )}
       </div>
 
-      {cars.length >= 2 && (
+      {slots.length >= 2 && (
         <>
-          {/* Loading */}
-          {!allLoaded && (
+          {!settled && (
             <div className="text-center py-16 glass rounded-3xl">
               <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary mb-3" />
               <p className="text-sm text-muted-foreground">Fetching AI specs for each vehicle...</p>
             </div>
           )}
 
-          {allLoaded && foundCars.length < 2 && (
-            <div className="text-center py-16 glass rounded-3xl">
-              <p>We couldn't find enough of these cars to compare. Please check the names.</p>
+          {settled && missing.length > 0 && (
+            <div className="glass rounded-2xl p-5 mb-8 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold">Car not found</p>
+                <p className="text-muted-foreground">
+                  We couldn't verify {missing.map((m) => `"${m.query}"`).join(", ")}. We never substitute a
+                  similar model — check the spelling or remove it from the comparison.
+                </p>
+              </div>
             </div>
           )}
 
-          {allLoaded && foundCars.length >= 2 && (
+          {settled && foundCars.length < 2 && (
+            <div className="text-center py-16 glass rounded-3xl">
+              <p>We need at least 2 verified cars to compare.</p>
+            </div>
+          )}
+
+          {settled && foundCars.length >= 2 && (
             <>
               <ComparisonTable cars={foundCars} />
               <AIAnalysis
@@ -152,21 +221,19 @@ function ComparisonTable({ cars }: { cars: CarSpec[] }) {
   return (
     <div className="glass-strong rounded-3xl overflow-hidden mb-10">
       <div className="grid" style={{ gridTemplateColumns: `200px repeat(${cars.length}, minmax(0, 1fr))` }}>
-        {/* Header */}
         <div className="p-5 border-b border-border/50" />
         {cars.map((c) => (
-          <div key={c.name} className="p-5 border-b border-border/50 border-l border-l-border/50">
+          <div key={c.id} className="p-5 border-b border-border/50 border-l border-l-border/50">
             <div className="text-xs text-accent uppercase tracking-widest">{c.brand}</div>
             <div className="font-bold text-lg mt-1 leading-tight">{c.name}</div>
             <div className="mt-2 text-xs text-muted-foreground">{c.bodyType} • {c.modelYear}</div>
           </div>
         ))}
-        {/* Rows */}
         {SPEC_ROWS.map(([label, key]) => (
           <div key={key} className="contents">
             <div className="p-4 text-sm text-muted-foreground border-b border-border/30 bg-white/[0.02]">{label}</div>
             {cars.map((c) => (
-              <div key={c.name + key} className="p-4 text-sm border-b border-border/30 border-l border-l-border/50 font-medium">
+              <div key={c.id + ":" + key} className="p-4 text-sm border-b border-border/30 border-l border-l-border/50 font-medium">
                 {(c[key] as string) || "Not Available"}
               </div>
             ))}
