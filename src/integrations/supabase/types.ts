@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      car_engine_options: {
+        Row: {
+          brand: string | null
+          car_id: string
+          car_name: string
+          created_at: string
+          cylinders: string | null
+          drivetrain: string | null
+          engine: string | null
+          engine_capacity: string | null
+          fitted_type: string
+          fuel_type: string
+          id: string
+          market: string
+          mileage_or_range: string | null
+          model_year: string | null
+          notes: string | null
+          power: string | null
+          price: string | null
+          torque: string | null
+          transmission: string | null
+          variant_name: string
+        }
+        Insert: {
+          brand?: string | null
+          car_id: string
+          car_name: string
+          created_at?: string
+          cylinders?: string | null
+          drivetrain?: string | null
+          engine?: string | null
+          engine_capacity?: string | null
+          fitted_type?: string
+          fuel_type: string
+          id?: string
+          market?: string
+          mileage_or_range?: string | null
+          model_year?: string | null
+          notes?: string | null
+          power?: string | null
+          price?: string | null
+          torque?: string | null
+          transmission?: string | null
+          variant_name: string
+        }
+        Update: {
+          brand?: string | null
+          car_id?: string
+          car_name?: string
+          created_at?: string
+          cylinders?: string | null
+          drivetrain?: string | null
+          engine?: string | null
+          engine_capacity?: string | null
+          fitted_type?: string
+          fuel_type?: string
+          id?: string
+          market?: string
+          mileage_or_range?: string | null
+          model_year?: string | null
+          notes?: string | null
+          power?: string | null
+          price?: string | null
+          torque?: string | null
+          transmission?: string | null
+          variant_name?: string
+        }
+        Relationships: []
+      }
       dream_garage_cars: {
         Row: {
           added_at: string
