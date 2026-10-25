@@ -18,18 +18,20 @@ export const Route = createFileRoute("/car/$name")({
 
 function CarPage() {
   const { name } = Route.useParams();
+  const search = Route.useSearch();
   const query = decodeURIComponent(name);
+  const fuel = search.fuel?.trim() || undefined;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["car", query],
-    queryFn: () => fetchCarSpecs({ data: { query } }),
+    queryKey: ["car", query, fuel ?? ""],
+    queryFn: () => fetchCarSpecs({ data: { query, fuel } }),
     staleTime: 1000 * 60 * 60,
   });
 
   if (isLoading) return <LoadingState query={query} />;
   if (error) return <ErrorState message={(error as Error).message} />;
   if (!data) return null;
-  if (!data.found) return <NotFoundState query={query} />;
+  if (!data.found) return <NotFoundState query={query} fuel={fuel} />;
 
   return <CarDetail spec={data} />;
 }
