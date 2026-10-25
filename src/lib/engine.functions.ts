@@ -98,11 +98,6 @@ export const fetchEngineOptions = createServerFn({ method: "POST" })
     const brand = (data.brand && data.brand !== NA ? data.brand : "").trim();
     const query = [brand, data.carName].filter(Boolean).join(" ");
 
-    // Identity guard: the AI must not be asked about a substituted car.
-    if (!identityMatches(data.carName, data.carName)) {
-      return { found: false, options: [] as EngineOption[] };
-    }
-
     // 1) Serve verified/cached rows first.
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

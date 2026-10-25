@@ -54,7 +54,7 @@ const CarSpecSchema = z.object({
 
 export type CarSpec = z.infer<typeof CarSpecSchema>;
 
-function getModel() {
+export function getModel() {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Missing LOVABLE_API_KEY — enable Lovable Cloud / AI to provision it.");
   const gateway = createLovableAiGatewayProvider(key);
