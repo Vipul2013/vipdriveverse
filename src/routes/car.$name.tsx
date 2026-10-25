@@ -3,13 +3,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
 import { carId } from "@/lib/car-id";
 import { fetchCarImages } from "@/lib/car-images.functions";
+import { fetchEngineOptions, type EngineOption } from "@/lib/engine.functions";
 import { addToDreamGarage } from "@/lib/dream-garage.functions";
 import { getDreamUser } from "@/lib/dream-auth.functions";
-import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight, Heart } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight, Heart, Zap } from "lucide-react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 export const Route = createFileRoute("/car/$name")({
+  validateSearch: z.object({ fuel: z.string().optional() }),
   component: CarPage,
 });
 
