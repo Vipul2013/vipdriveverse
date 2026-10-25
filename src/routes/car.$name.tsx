@@ -3,30 +3,35 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
 import { carId } from "@/lib/car-id";
 import { fetchCarImages } from "@/lib/car-images.functions";
+import { fetchEngineOptions, type EngineOption } from "@/lib/engine.functions";
 import { addToDreamGarage } from "@/lib/dream-garage.functions";
 import { getDreamUser } from "@/lib/dream-auth.functions";
-import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight, Heart } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, ArrowLeft, Check, X, Sparkles, GitCompare, Ruler, Fuel, Shield, DollarSign, Cog, Car, ImageOff, ChevronLeft, ChevronRight, Heart, Zap } from "lucide-react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 export const Route = createFileRoute("/car/$name")({
+  validateSearch: z.object({ fuel: z.string().optional() }),
   component: CarPage,
 });
 
 function CarPage() {
   const { name } = Route.useParams();
+  const search = Route.useSearch();
   const query = decodeURIComponent(name);
+  const fuel = search.fuel?.trim() || undefined;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["car", query],
-    queryFn: () => fetchCarSpecs({ data: { query } }),
+    queryKey: ["car", query, fuel ?? ""],
+    queryFn: () => fetchCarSpecs({ data: { query, fuel } }),
     staleTime: 1000 * 60 * 60,
   });
 
   if (isLoading) return <LoadingState query={query} />;
   if (error) return <ErrorState message={(error as Error).message} />;
   if (!data) return null;
-  if (!data.found) return <NotFoundState query={query} />;
+  if (!data.found) return <NotFoundState query={query} fuel={fuel} />;
 
   return <CarDetail spec={data} />;
 }
@@ -46,14 +51,16 @@ function LoadingState({ query }: { query: string }) {
   );
 }
 
-function NotFoundState({ query }: { query: string }) {
+function NotFoundState({ query, fuel }: { query: string; fuel?: string }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 text-center">
       <div className="glass rounded-3xl p-12">
         <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Couldn't find "{query}"</h1>
         <p className="mt-3 text-muted-foreground">
-          We couldn't reliably identify this vehicle. Please check the spelling or try a different model.
+          {fuel
+            ? `We couldn't verify a factory ${fuel} variant of "${query}". This model may only be available with other powertrains — try the search again without the fuel filter.`
+            : "We couldn't reliably identify this vehicle. Please check the spelling or try a different model."}
         </p>
         <Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
           <ArrowLeft className="h-4 w-4" /> Back home
@@ -173,6 +180,7 @@ function CarDetail({ spec }: { spec: CarSpec }) {
         </div>
       </div>
 
+      <EngineOptionsSection key={spec.id} spec={spec} />
 
       {/* Specs grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -402,6 +410,245 @@ function CarGallery({ query, bodyType, country }: { query: string; bodyType: str
         </div>
       )}
     </div>
+  );
+}
+
+const NA_LABEL = "Not Available";
+
+const ENGINE_FIELD_ROWS: [string, (o: EngineOption) => string][] = [
+  ["Engine", (o) => o.engine],
+  ["Capacity", (o) => o.engineCapacity],
+  ["Cylinders", (o) => o.cylinders],
+  ["Power", (o) => o.power],
+  ["Torque", (o) => o.torque],
+  ["Transmission", (o) => o.transmission],
+  ["Drivetrain", (o) => o.drivetrain],
+  ["Mileage / Range", (o) => o.mileageOrRange],
+  ["Price", (o) => o.price],
+];
+
+function optKey(o: EngineOption): string {
+  return `${o.fittedType}|${o.variantName}|${o.fuelType}|${o.engine}`;
+}
+
+function FittedBadge({ fitted }: { fitted: "factory" | "aftermarket" }) {
+  if (fitted === "aftermarket") {
+    return (
+      <span className="rounded-full bg-orange-400/15 border border-orange-400/40 px-2 py-0.5 text-[10px] font-semibold text-orange-300 uppercase tracking-wide">
+        Aftermarket
+      </span>
+    );
+  }
+  return (
+    <span className="rounded-full bg-green-400/10 border border-green-400/40 px-2 py-0.5 text-[10px] font-semibold text-green-300 uppercase tracking-wide">
+      Factory-fitted
+    </span>
+  );
+}
+
+function EngineOptionsSection({ spec }: { spec: CarSpec }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["engine-options", spec.id],
+    queryFn: () =>
+      fetchEngineOptions({
+        data: {
+          carId: spec.id,
+          carName: spec.name,
+          brand: spec.brand,
+          modelYear: spec.modelYear,
+          country: spec.country,
+        },
+      }),
+    staleTime: 1000 * 60 * 60 * 24,
+  });
+
+  const options = useMemo(() => data?.options ?? [], [data]);
+  const fuels = useMemo(() => Array.from(new Set(options.map((o) => o.fuelType))), [options]);
+
+  const [fuel, setFuel] = useState<string | null>(null);
+  const [variantKey, setVariantKey] = useState<string | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  const activeFuel = fuel && fuels.includes(fuel) ? fuel : fuels[0] ?? null;
+  const forFuel = useMemo(
+    () => (activeFuel ? options.filter((o) => o.fuelType === activeFuel) : []),
+    [options, activeFuel],
+  );
+  const activeKey =
+    variantKey && forFuel.some((o) => optKey(o) === variantKey)
+      ? variantKey
+      : forFuel[0]
+        ? optKey(forFuel[0])
+        : null;
+  const selected = forFuel.find((o) => optKey(o) === activeKey) ?? null;
+
+  const toggleCompare = (k: string) =>
+    setCompareIds((prev) =>
+      prev.includes(k) ? prev.filter((x) => x !== k) : prev.length >= 3 ? prev : [...prev, k],
+    );
+  const compareOptions = compareIds
+    .map((k) => options.find((o) => optKey(o) === k))
+    .filter((o): o is EngineOption => !!o);
+
+  return (
+    <section className="mt-8 glass-strong rounded-3xl p-6 sm:p-8">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow">
+          <Zap className="h-5 w-5 text-primary-foreground" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold">Engine & Fuel Options</h2>
+          <p className="text-xs text-muted-foreground">
+            Genuine engine / powertrain configurations for this exact car — factory-fitted options only, plus clearly-labelled aftermarket conversions where verified.
+          </p>
+        </div>
+      </div>
+
+      {isLoading && (
+        <div className="mt-8 py-10 text-center">
+          <div className="h-8 w-8 mx-auto rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
+          <p className="mt-3 text-sm text-muted-foreground">Verifying engine and fuel options...</p>
+        </div>
+      )}
+
+      {!isLoading && (error || !data?.found || options.length === 0) && (
+        <div className="mt-6 rounded-2xl border border-border/50 bg-white/[0.02] p-5 text-sm text-muted-foreground">
+          {error ? (
+            <>Engine options are temporarily unavailable. Please try again in a moment.</>
+          ) : (
+            <>
+              No verified engine / fuel options could be confirmed for this exact car, market and model year.
+              We never list an option without evidence — so nothing is shown rather than guessed.
+            </>
+          )}
+        </div>
+      )}
+
+      {!isLoading && !error && data?.found && options.length > 0 && (
+        <>
+          {/* Fuel type selector */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            {fuels.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFuel(f)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition border ${
+                  f === activeFuel
+                    ? "bg-primary/25 border-primary/60 text-primary"
+                    : "glass border-transparent hover:border-primary/40"
+                }`}
+              >
+                <Fuel className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5" />
+                {f}
+              </button>
+            ))}
+          </div>
+
+          {/* Variant selector */}
+          {forFuel.length > 1 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {forFuel.map((o) => (
+                <button
+                  key={optKey(o)}
+                  onClick={() => setVariantKey(optKey(o))}
+                  className={`rounded-xl px-3.5 py-2 text-xs font-medium transition border ${
+                    optKey(o) === activeKey
+                      ? "bg-white/10 border-primary/60"
+                      : "glass border-transparent opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  {o.variantName}
+                  {o.fittedType === "aftermarket" && <span className="ml-1.5 text-orange-300">(AM)</span>}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Selected option details */}
+          {selected && (
+            <div className="mt-5 grid gap-4 lg:grid-cols-3">
+              <div className="glass rounded-2xl p-5 lg:col-span-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div>
+                    <div className="text-xs text-accent uppercase tracking-widest">{selected.fuelType}</div>
+                    <div className="font-bold text-lg mt-0.5">{selected.variantName}</div>
+                  </div>
+                  <FittedBadge fitted={selected.fittedType} />
+                </div>
+                <div>
+                  {ENGINE_FIELD_ROWS.map(([label, get]) => (
+                    <SpecRow key={label} label={label} value={get(selected)} />
+                  ))}
+                </div>
+                {selected.notes && (
+                  <p className="mt-4 text-xs text-muted-foreground border-l-2 border-orange-400/50 pl-3">
+                    {selected.notes}
+                  </p>
+                )}
+              </div>
+              <div className="glass rounded-2xl p-5 flex flex-col justify-center gap-3">
+                <div className="text-xs font-semibold text-accent uppercase tracking-wider">Compare options</div>
+                <p className="text-xs text-muted-foreground">
+                  Pick up to 3 engine / fuel options of this car and compare them side-by-side.
+                </p>
+                <button
+                  onClick={() => toggleCompare(optKey(selected))}
+                  disabled={compareIds.length >= 3 && !compareIds.includes(optKey(selected))}
+                  className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-40 ${
+                    compareIds.includes(optKey(selected))
+                      ? "bg-primary/25 border border-primary/60 text-primary"
+                      : "bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                  }`}
+                >
+                  {compareIds.includes(optKey(selected)) ? "Added to comparison ✓" : "Add to comparison"}
+                </button>
+                {compareIds.length > 0 && (
+                  <button
+                    onClick={() => setCompareIds([])}
+                    className="text-xs text-muted-foreground hover:text-foreground transition"
+                  >
+                    Clear selection ({compareIds.length})
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Same-car option comparison table */}
+          {compareOptions.length >= 2 && (
+            <div className="mt-6 glass rounded-2xl p-4 overflow-x-auto">
+              <div className="min-w-[520px]">
+                <div
+                  className="grid"
+                  style={{ gridTemplateColumns: `150px repeat(${compareOptions.length}, minmax(0, 1fr))` }}
+                >
+                  <div className="p-3 border-b border-border/40" />
+                  {compareOptions.map((o) => (
+                    <div key={optKey(o)} className="p-3 border-b border-border/40 border-l border-l-border/40">
+                      <div className="text-[10px] text-accent uppercase tracking-widest">{o.fuelType}</div>
+                      <div className="font-semibold text-sm mt-0.5">{o.variantName}</div>
+                      <div className="mt-1"><FittedBadge fitted={o.fittedType} /></div>
+                    </div>
+                  ))}
+                  {[...ENGINE_FIELD_ROWS, ["Type", (o: EngineOption) => (o.fittedType === "factory" ? "Factory" : "Aftermarket")] as [string, (o: EngineOption) => string]].map(
+                    ([label, get]) => (
+                      <div key={label} className="contents">
+                        <div className="p-3 text-xs text-muted-foreground border-b border-border/25 bg-white/[0.02]">{label}</div>
+                        {compareOptions.map((o) => (
+                          <div key={optKey(o) + label} className="p-3 text-sm border-b border-border/25 border-l border-l-border/40 font-medium">
+                            {get(o) || NA_LABEL}
+                          </div>
+                        ))}
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 

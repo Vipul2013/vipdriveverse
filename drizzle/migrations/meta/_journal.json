@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792946223447,
+      "tag": "0000_create_car_engine_options",
+      "breakpoints": true
+    }
+  ]
+}
