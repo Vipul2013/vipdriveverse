@@ -154,20 +154,35 @@ const SPEC_SCHEMA_HINT = `{
 }`;
 
 export const fetchCarSpecs = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ query: z.string().min(1).max(200) }).parse(input))
+  .inputValidator((input: unknown) =>
+    z
+      .object({ query: z.string().min(1).max(200), fuel: z.string().max(50).optional() })
+      .parse(input),
+  )
   .handler(async ({ data }): Promise<CarSpec> => {
     const query = data.query.trim();
+    const fuel = data.fuel?.trim();
     const model = getModel();
-    const prompt = `Return full JSON specifications for this EXACT car: "${query}". Use the latest common production variant unless a year/variant is specified. If "${query}" is not a real vehicle you recognise, respond with {"found": false, "name": "${query}"} only — never return a different model instead. Provide 3-5 pros, 3-5 cons, and 3-5 competitor names. Respond with ONLY a JSON object matching this schema:\n${SPEC_SCHEMA_HINT}`;
+    const fuelRule = fuel
+      ? `\nFUEL FILTER (critical): The user is only interested in a factory "${fuel}" powertrain. Consider ONLY genuine factory variants of "${query}" powered by ${fuel}. If "${query}" has no factory ${fuel} variant in its production lineup, respond with {"found": false, "name": "${query}"} — never return a different powertrain version instead.`
+      : "";
+    const prompt = `Return full JSON specifications for this EXACT car: "${query}".${fuelRule} Use the latest common production variant unless a year/variant is specified. If "${query}" is not a real vehicle you recognise, respond with {"found": false, "name": "${query}"} only — never return a different model instead. Provide 3-5 pros, 3-5 cons, and 3-5 competitor names. Respond with ONLY a JSON object matching this schema:\n${SPEC_SCHEMA_HINT}`;
 
     let rawText = "";
     try {
       const result = await generateText({ model, system: SPEC_SYSTEM, prompt });
       rawText = result.text ?? "";
-      console.log("[fetchCarSpecs] query:", query, "raw length:", rawText.length);
+      console.log("[fetchCarSpecs] query:", query, "fuel:", fuel ?? "-", "raw length:", rawText.length);
       if (!rawText) throw new Error("Empty response from model");
       const parsed = extractJson(rawText);
-      const spec = coerceToSpec(query, parsed);
+      let spec = coerceToSpec(query, parsed);
+
+      // Belt-and-braces fuel filter: the model must have honoured it.
+      if (spec.found && fuel) {
+        const kw = fuel.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const ft = spec.fuelType.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (!kw || !ft.includes(kw)) spec = { ...spec, found: false };
+      }
       return spec;
     } catch (err) {
       console.error("[fetchCarSpecs] failed for", query, "error:", (err as Error).message, "raw:", rawText.slice(0, 500));
