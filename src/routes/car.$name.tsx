@@ -46,14 +46,16 @@ function LoadingState({ query }: { query: string }) {
   );
 }
 
-function NotFoundState({ query }: { query: string }) {
+function NotFoundState({ query, fuel }: { query: string; fuel?: string }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 text-center">
       <div className="glass rounded-3xl p-12">
         <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Couldn't find "{query}"</h1>
         <p className="mt-3 text-muted-foreground">
-          We couldn't reliably identify this vehicle. Please check the spelling or try a different model.
+          {fuel
+            ? `We couldn't verify a factory ${fuel} variant of "${query}". This model may only be available with other powertrains — try the search again without the fuel filter.`
+            : "We couldn't reliably identify this vehicle. Please check the spelling or try a different model."}
         </p>
         <Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
           <ArrowLeft className="h-4 w-4" /> Back home
@@ -173,6 +175,7 @@ function CarDetail({ spec }: { spec: CarSpec }) {
         </div>
       </div>
 
+      <EngineOptionsSection key={spec.id} spec={spec} />
 
       {/* Specs grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
