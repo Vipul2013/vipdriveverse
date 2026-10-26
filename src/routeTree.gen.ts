@@ -9,27 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RankingsRouteImport } from './routes/rankings'
-import { Route as DreamGarageRouteImport } from './routes/dream-garage'
-import { Route as CompareRouteImport } from './routes/compare'
-import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as CarNameRouteImport } from './routes/car.$name'
+import { Route as BrandsRouteImport } from './routes/brands'
+import { Route as CompareRouteImport } from './routes/compare'
+import { Route as DreamGarageRouteImport } from './routes/dream-garage'
+import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as BrandNameRouteImport } from './routes/brand.$name'
+import { Route as CarNameRouteImport } from './routes/car.$name'
 
-const RankingsRoute = RankingsRouteImport.update({
-  id: '/rankings',
-  path: '/rankings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DreamGarageRoute = DreamGarageRouteImport.update({
-  id: '/dream-garage',
-  path: '/dream-garage',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompareRoute = CompareRouteImport.update({
-  id: '/compare',
-  path: '/compare',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrandsRoute = BrandsRouteImport.update({
@@ -37,19 +27,29 @@ const BrandsRoute = BrandsRouteImport.update({
   path: '/brands',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CarNameRoute = CarNameRouteImport.update({
-  id: '/car/$name',
-  path: '/car/$name',
+const DreamGarageRoute = DreamGarageRouteImport.update({
+  id: '/dream-garage',
+  path: '/dream-garage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingsRoute = RankingsRouteImport.update({
+  id: '/rankings',
+  path: '/rankings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrandNameRoute = BrandNameRouteImport.update({
   id: '/brand/$name',
   path: '/brand/$name',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CarNameRoute = CarNameRouteImport.update({
+  id: '/car/$name',
+  path: '/car/$name',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -123,25 +123,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/rankings': {
-      id: '/rankings'
-      path: '/rankings'
-      fullPath: '/rankings'
-      preLoaderRoute: typeof RankingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dream-garage': {
-      id: '/dream-garage'
-      path: '/dream-garage'
-      fullPath: '/dream-garage'
-      preLoaderRoute: typeof DreamGarageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compare': {
-      id: '/compare'
-      path: '/compare'
-      fullPath: '/compare'
-      preLoaderRoute: typeof CompareRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/brands': {
@@ -151,18 +137,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrandsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/car/$name': {
-      id: '/car/$name'
-      path: '/car/$name'
-      fullPath: '/car/$name'
-      preLoaderRoute: typeof CarNameRouteImport
+    '/dream-garage': {
+      id: '/dream-garage'
+      path: '/dream-garage'
+      fullPath: '/dream-garage'
+      preLoaderRoute: typeof DreamGarageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rankings': {
+      id: '/rankings'
+      path: '/rankings'
+      fullPath: '/rankings'
+      preLoaderRoute: typeof RankingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/brand/$name': {
@@ -170,6 +163,13 @@ declare module '@tanstack/react-router' {
       path: '/brand/$name'
       fullPath: '/brand/$name'
       preLoaderRoute: typeof BrandNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/car/$name': {
+      id: '/car/$name'
+      path: '/car/$name'
+      fullPath: '/car/$name'
+      preLoaderRoute: typeof CarNameRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

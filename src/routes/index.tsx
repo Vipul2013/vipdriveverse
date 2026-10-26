@@ -23,13 +23,27 @@ const TRENDING = [
   ["Tata Nexon EV", "MG ZS EV"],
 ];
 
+const FUEL_FILTERS: { label: string; value: string }[] = [
+  { label: "All fuels", value: "" },
+  { label: "Petrol", value: "petrol" },
+  { label: "Diesel", value: "diesel" },
+  { label: "CNG", value: "cng" },
+  { label: "Hybrid", value: "hybrid" },
+  { label: "Electric", value: "electric" },
+];
+
 function Home() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [fuel, setFuel] = useState("");
 
   const go = (name: string) => {
     if (!name.trim()) return;
-    navigate({ to: "/car/$name", params: { name: encodeURIComponent(name.trim()) } });
+    navigate({
+      to: "/car/$name",
+      params: { name: encodeURIComponent(name.trim()) },
+      search: fuel ? { fuel } : {},
+    });
   };
 
   return (
@@ -78,6 +92,21 @@ function Home() {
                   onClick={() => go(s)}
                   className="rounded-full glass px-3 py-1.5 hover:border-primary/50 transition"
                 >{s}</button>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap justify-center items-center gap-2 text-xs">
+              <span className="text-muted-foreground/70 uppercase tracking-widest text-[10px]">Fuel</span>
+              {FUEL_FILTERS.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  onClick={() => setFuel(f.value)}
+                  className={
+                    fuel === f.value
+                      ? "rounded-full bg-primary/25 border border-primary/60 px-3 py-1.5 text-primary font-medium"
+                      : "rounded-full glass px-3 py-1.5 hover:border-primary/50 transition"
+                  }
+                >{f.label}</button>
               ))}
             </div>
           </form>
