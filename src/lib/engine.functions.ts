@@ -6,15 +6,6 @@ import { identityMatches } from "./car-id";
 
 const NA = "Not Available";
 
-export const FUEL_KEYWORDS: Record<string, string> = {
-  Petrol: "petrol",
-  Diesel: "diesel",
-  CNG: "cng",
-  Hybrid: "hybrid",
-  Electric: "electric",
-  Hydrogen: "hydrogen",
-};
-
 const EngineOptionSchema = z.object({
   variantName: z.string(),
   fuelType: z.string(),
