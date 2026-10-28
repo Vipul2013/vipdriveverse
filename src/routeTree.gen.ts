@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as DreamGarageRouteImport } from './routes/dream-garage'
+import { Route as FinderRouteImport } from './routes/finder'
 import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as BrandNameRouteImport } from './routes/brand.$name'
 import { Route as CarNameRouteImport } from './routes/car.$name'
@@ -37,6 +38,11 @@ const DreamGarageRoute = DreamGarageRouteImport.update({
   path: '/dream-garage',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinderRoute = FinderRouteImport.update({
+  id: '/finder',
+  path: '/finder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RankingsRoute = RankingsRouteImport.update({
   id: '/rankings',
   path: '/rankings',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
+  '/finder': typeof FinderRoute
   '/rankings': typeof RankingsRoute
   '/brand/$name': typeof BrandNameRoute
   '/car/$name': typeof CarNameRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
+  '/finder': typeof FinderRoute
   '/rankings': typeof RankingsRoute
   '/brand/$name': typeof BrandNameRoute
   '/car/$name': typeof CarNameRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/brands': typeof BrandsRoute
   '/compare': typeof CompareRoute
   '/dream-garage': typeof DreamGarageRoute
+  '/finder': typeof FinderRoute
   '/rankings': typeof RankingsRoute
   '/brand/$name': typeof BrandNameRoute
   '/car/$name': typeof CarNameRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/brands'
     | '/compare'
     | '/dream-garage'
+    | '/finder'
     | '/rankings'
     | '/brand/$name'
     | '/car/$name'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/brands'
     | '/compare'
     | '/dream-garage'
+    | '/finder'
     | '/rankings'
     | '/brand/$name'
     | '/car/$name'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/brands'
     | '/compare'
     | '/dream-garage'
+    | '/finder'
     | '/rankings'
     | '/brand/$name'
     | '/car/$name'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   BrandsRoute: typeof BrandsRoute
   CompareRoute: typeof CompareRoute
   DreamGarageRoute: typeof DreamGarageRoute
+  FinderRoute: typeof FinderRoute
   RankingsRoute: typeof RankingsRoute
   BrandNameRoute: typeof BrandNameRoute
   CarNameRoute: typeof CarNameRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DreamGarageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finder': {
+      id: '/finder'
+      path: '/finder'
+      fullPath: '/finder'
+      preLoaderRoute: typeof FinderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rankings': {
       id: '/rankings'
       path: '/rankings'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrandsRoute: BrandsRoute,
   CompareRoute: CompareRoute,
   DreamGarageRoute: DreamGarageRoute,
+  FinderRoute: FinderRoute,
   RankingsRoute: RankingsRoute,
   BrandNameRoute: BrandNameRoute,
   CarNameRoute: CarNameRoute,
