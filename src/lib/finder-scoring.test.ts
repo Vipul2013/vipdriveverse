@@ -118,14 +118,28 @@ describe("scoreFinderCandidates", () => {
   test("matching car ranks with parsed specs and budget explanation", () => {
     const r = scoreFinderCandidates([car({ name: "Good Car" })], prefs());
     expect(r.matches).toHaveLength(1);
-    expect(r.matches[0].id).toBe("test-car");
+    expect(r.matches[0].id).toBe("good-car");
     expect(r.matches[0].rank).toBe(1);
     expect(r.matches[0].why[0]).toContain("₹5–20 lakh budget");
   });
 
   test("usage nudge: efficient car wins under city use, tie otherwise", () => {
-    const a = car({ name: "Fast Car", horsepower: "200 bhp", fuelEconomyOrRange: "12 km/l" });
-    const b = car({ name: "Frugal Car", horsepower: "100 bhp", fuelEconomyOrRange: "25 km/l" });
+    // No torque/accel data → performance is driven purely by horsepower,
+    // so the two cars mirror each other exactly (hp vs efficiency).
+    const a = car({
+      name: "Fast Car",
+      horsepower: "200 bhp",
+      fuelEconomyOrRange: "12 km/l",
+      torque: "Not Available",
+      zeroToHundred: "Not Available",
+    });
+    const b = car({
+      name: "Frugal Car",
+      horsepower: "100 bhp",
+      fuelEconomyOrRange: "25 km/l",
+      torque: "Not Available",
+      zeroToHundred: "Not Available",
+    });
     const mixed = scoreFinderCandidates([a, b], prefs());
     const city = scoreFinderCandidates([a, b], prefs({ usage: "city" }));
     const fastMixed = mixed.matches.find((m) => m.name === "Fast Car")!.matchScore;
