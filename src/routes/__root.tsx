@@ -121,6 +121,9 @@ function Nav() {
           <Link to="/compare" className="rounded-full px-3 py-2 hover:bg-white/5 transition" activeProps={{ className: "text-primary" }}>
             Compare
           </Link>
+          <Link to="/calculator" className="rounded-full px-3 py-2 hover:bg-white/5 transition inline-flex items-center gap-1.5" activeProps={{ className: "text-primary" }}>
+            <span>💰</span> <span className="hidden sm:inline">Cost Calculator</span><span className="sm:hidden">Costs</span>
+          </Link>
           <Link to="/finder" className="rounded-full px-3 py-2 hover:bg-white/5 transition inline-flex items-center gap-1.5" activeProps={{ className: "text-primary" }}>
             <span>🔍</span> <span className="hidden sm:inline">Smart Finder</span><span className="sm:hidden">Finder</span>
           </Link>

@@ -16,3 +16,7 @@
 ## Smart Car Finder
 - Smart Car Finder (`src/lib/finder.*`, route `/finder`) is two-stage: Gemini only proposes candidate cars matching the user's hard filters, then the deterministic layer in `finder-scoring.ts` parses verbatim spec strings, excludes cars with unverifiable India prices or data missing for a chosen priority, and ranks matches with weighted real metrics plus AI 0-10 comfort/luxury/reliability ratings. Why: recommendations must stay transparent and never invent data.
 - Finder result actions reuse existing identities: View Car links use the exact car name (`/car/$name`), Compare uses stable car ids from `src/lib/car-id.ts` via `/compare?cars=<id,id>`. Scoring rules are covered by `src/lib/finder-scoring.test.ts` (run with `bun test`).
+
+## Car Ownership Cost Calculator
+- The Cost Calculator (`src/lib/cost-calculator.ts`, route `/calculator`) is pure client-side math — no AI calls and no second car database. It reuses the shared `["car", id]` spec cache and stable car ids from `src/lib/car-id.ts`. Why: the calculator must be credit-efficient and cannot invent or duplicate vehicle data.
+- Accuracy rules enforced by `src/lib/cost-calculator.test.ts` (run with `bun test`): purchase price is counted exactly once (down payment and loan principal are parts of it, only interest is extra), missing efficiency means fuel cost 0 (never guessed), resale comes only from a user-entered percentage, and net cost = total expenditure − resale.

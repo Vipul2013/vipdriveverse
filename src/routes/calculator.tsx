@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { fetchCarSpecs, type CarSpec } from "@/lib/car.functions";
 import { carId, idToQuery } from "@/lib/car-id";
@@ -100,6 +100,8 @@ function CalculatorPage() {
   });
 
   // Prefill assumptions from verified spec values exactly once per car.
+  // Keyed on the loaded spec ids so the effect re-runs when AI specs arrive.
+  const loadedSpecKey = slots.map((s, i) => results[i]?.data?.id ?? "-").join("|");
   useEffect(() => {
     slots.forEach((slot, i) => {
       const spec = results[i]?.data;
@@ -108,9 +110,8 @@ function CalculatorPage() {
       setAssumptions((prev) => ({ ...prev, [slot.id]: prefillFromSpec(spec) }));
       setInitialized((prev) => ({ ...prev, [slot.id]: true }));
     });
-    // results array identity changes on every render; slots + initialized are the deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slots, initialized]);
+  }, [loadedSpecKey, initialized]);
 
   const setSlots = (next: Slot[]) =>
     navigate({
