@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import type { CarSpec } from "./car.functions";
 import {
   calculateOwnership,
   classifyFuel,
@@ -7,7 +8,6 @@ import {
   formatUsd,
   prefillFromSpec,
   type CarAssumptions,
-  type CarSpec,
 } from "./cost-calculator";
 
 function spec(overrides: Partial<CarSpec>): CarSpec {
