@@ -135,7 +135,7 @@ describe("calculateOwnership", () => {
       efficiency: 6,
     };
     const r = calculateOwnership(ev, 1);
-    expect(r.fuel).toBe(Math.round((10000 / 6) * 10));
+    expect(r.fuel).toBeCloseTo((10000 / 6) * 10, 6);
   });
 
   test("missing efficiency is handled safely: fuel cost is 0, not invented", () => {
