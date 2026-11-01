@@ -6,6 +6,7 @@ import {
   calculateOwnership,
   classifyFuel,
   defaultAssumptions,
+  DEFAULT_ENERGY_PRICE,
   EFFICIENCY_UNIT,
   ENERGY_UNIT,
   FUEL_CATEGORY_OPTIONS,
