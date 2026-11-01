@@ -684,11 +684,14 @@ function ComparisonSummary({
             ))}
             {COMPARE_ROWS.map((row) => {
               const values = rows.map((r) => row.pick(r.result));
+              // Only entered (> 0) values compete for the best mark — a blank
+              // assumption must not "win" a row.
+              const entered = values.filter((v) => v > 0);
               const best =
-                row.lowerIsBetter !== undefined && values.some((v) => v > 0)
+                row.lowerIsBetter !== undefined && entered.length
                   ? row.lowerIsBetter
-                    ? Math.min(...values)
-                    : Math.max(...values)
+                    ? Math.min(...entered)
+                    : Math.max(...entered)
                   : null;
               return (
                 <div key={row.label} className="contents">
