@@ -287,10 +287,12 @@ function CalculatorPage() {
           onLoan={(patch) => updateLoan(spec.id, patch)}
           onFuelCategory={(fuel) => {
             const prev = a.fuelCategory;
+            // When the price is still this fuel's default, follow the new fuel's
+            // default; a user-entered price is kept untouched.
+            const wasDefault = a.fuelPrice === DEFAULT_ENERGY_PRICE[prev];
             updateAssumptions(spec.id, {
               fuelCategory: fuel,
-              // keep each fuel's energy price only when it was untouched defaults
-              fuelPrice: a.fuelPrice === 0 ? 0 : a.fuelPrice,
+              fuelPrice: wasDefault ? DEFAULT_ENERGY_PRICE[fuel] : a.fuelPrice,
               ...(prev !== fuel ? { efficiency: 0 } : {}),
             });
           }}
