@@ -6,6 +6,7 @@ import {
   calculateOwnership,
   classifyFuel,
   defaultAssumptions,
+  DEFAULT_ENERGY_PRICE,
   EFFICIENCY_UNIT,
   ENERGY_UNIT,
   FUEL_CATEGORY_OPTIONS,
@@ -287,10 +288,12 @@ function CalculatorPage() {
           onLoan={(patch) => updateLoan(spec.id, patch)}
           onFuelCategory={(fuel) => {
             const prev = a.fuelCategory;
+            // When the price is still this fuel's default, follow the new fuel's
+            // default; a user-entered price is kept untouched.
+            const wasDefault = a.fuelPrice === DEFAULT_ENERGY_PRICE[prev];
             updateAssumptions(spec.id, {
               fuelCategory: fuel,
-              // keep each fuel's energy price only when it was untouched defaults
-              fuelPrice: a.fuelPrice === 0 ? 0 : a.fuelPrice,
+              fuelPrice: wasDefault ? DEFAULT_ENERGY_PRICE[fuel] : a.fuelPrice,
               ...(prev !== fuel ? { efficiency: 0 } : {}),
             });
           }}
@@ -681,11 +684,14 @@ function ComparisonSummary({
             ))}
             {COMPARE_ROWS.map((row) => {
               const values = rows.map((r) => row.pick(r.result));
+              // Only entered (> 0) values compete for the best mark — a blank
+              // assumption must not "win" a row.
+              const entered = values.filter((v) => v > 0);
               const best =
-                row.lowerIsBetter !== undefined && values.some((v) => v > 0)
+                row.lowerIsBetter !== undefined && entered.length
                   ? row.lowerIsBetter
-                    ? Math.min(...values)
-                    : Math.max(...values)
+                    ? Math.min(...entered)
+                    : Math.max(...entered)
                   : null;
               return (
                 <div key={row.label} className="contents">
